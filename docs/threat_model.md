@@ -1,0 +1,1 @@
+“TermTalk is a peer-to-peer, end-to-end-encrypted terminal chat that creates ephemeral rooms with no central server or permanent logs.”
