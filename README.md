@@ -14,8 +14,8 @@ It lets two users communicate securely over a direct socket connection — no se
 ## 🚀 Quick Start
 
 1. Clone the repository:
-   ```git clone https://github.com/yourusername/terminal-chat.git```
-   ```cd terminal-chat```
+   ```git clone https://github.com/xzyqiu/Terminal-Chat-App/.git```
+   ```cd Terminal-Chat-App```
 
 2. Create and activate a virtual environment:
    ```python -m venv venv```
