@@ -47,11 +47,11 @@ Your data is safe even if the network is compromised.
 
 🧠 How It Works
 
-    Handshake Phase: Host and guest exchange public keys to establish a secure session key.
+Handshake Phase: Host and guest exchange public keys to establish a secure session key.
 
-    Message Encryption: Every message is encrypted using the session key before being sent.
+Message Encryption: Every message is encrypted using the session key before being sent.
 
-    Direct Socket Communication: Messages travel directly between peers; no third-party server involved.
+Direct Socket Communication: Messages travel directly between peers; no third-party server involved.
 
 🏷️ Topics
 
