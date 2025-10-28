@@ -1,11 +1,8 @@
-# src/cli/main.py
 import threading
 from datetime import datetime
 from src.room.manager import RoomManager
 from src.transport.socket_handler import EncryptedHostSocket, EncryptedPeerSocket
-
 from termcolor import colored
-
 room_manager = RoomManager()
 
 def format_message(peer_id, message):
@@ -13,13 +10,13 @@ def format_message(peer_id, message):
     return f"[{timestamp}] {peer_id}: {message}"
 
 def host_room():
-    host_ip = input("Enter your IP to host (0.0.0.0 for all interfaces): ").strip() or "0.0.0.0"
-    host_port = int(input("Enter port to listen on (default 12345): ") or 12345)
-    expiry = int(input("Room duration in seconds (default 300): ") or 300)
+    host_ip = input("Enter ip for host (0.0.0.0 for all interfaces): ").strip() or "0.0.0.0"
+    host_port = int(input("Enter port to listen on(default 12345): ") or 12345)
+    expiry = int(input("Room duration seconds (default 300): ") or 300)
 
     room = room_manager.create_room(host_ip, host_port, expiry)
     host_socket = EncryptedHostSocket(host_ip, host_port)
-    room.host_socket = host_socket  # link socket for cleanup
+    room.host_socket = host_socket
     host_socket.start()
 
     print(colored(f"[CLI] Room created! Room ID: {room.room_id}", "green"))
@@ -50,7 +47,7 @@ def join_room():
         peer_socket.close()
 
 def main():
-    print(colored("Welcome to Secure Terminal Messenger", "green"))
+    print(colored("Welcome to TermTalk", "green"))
     print("1. Host a room")
     print("2. Join a room")
     choice = input("Select an option: ").strip()

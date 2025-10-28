@@ -10,7 +10,7 @@ class Room:
         self.duration = duration
         self.start_time = time.time()
         self.active = True
-        self.peers = {}  # peer_id: info
+        self.peers = {}
 
     def add_peer(self, peer_info=None):
         peer_id = str(uuid.uuid4())[:6]

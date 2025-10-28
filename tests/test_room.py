@@ -9,7 +9,6 @@ class TestRoomManager(unittest.TestCase):
         self.assertTrue(room.active)
         self.assertIn(room.room_id, manager.rooms)
 
-        # Wait for room to expire
         time.sleep(3)
         self.assertFalse(room.active)
         self.assertNotIn(room.room_id, manager.rooms)

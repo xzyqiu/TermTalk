@@ -10,10 +10,8 @@ class TestHandshake(unittest.TestCase):
         shared_key_alice = alice.generate_shared_box(bob.key)
         shared_key_bob = bob.generate_shared_box(alice.key)
 
-        # Both should produce the same shared key
         self.assertEqual(shared_key_alice, shared_key_bob)
 
-        # Test encryption/decryption
         box = SecureBox(shared_key_alice)
         message = "Secret handshake"
         encrypted = box.encrypt(message)
