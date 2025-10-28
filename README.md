@@ -1,6 +1,6 @@
 # 🗨️ Secure Encrypted CLI Messaging
 
-**Terminal Chat** is a lightweight, end-to-end encrypted messaging app that runs entirely in your terminal.  
+**TermiTalk** is a lightweight, end-to-end encrypted messaging app that runs entirely in your terminal.  
 It lets two users communicate securely over a direct socket connection — no servers, no cloud, just your terminal and an IP address.
 
 ## 🔒 Features
@@ -15,8 +15,8 @@ It lets two users communicate securely over a direct socket connection — no se
 
 1. Clone the repository:
 ```
-git clone https://github.com/xzyqiu/Terminal-Chat-App.git
-cd Terminal-Chat-App
+git clone https://github.com/xzyqiu/TermTalk.git
+cd TermTalk
 ```
 2. Create and activate a virtual environment:
 ```
