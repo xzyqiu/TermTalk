@@ -14,24 +14,24 @@ It lets two users communicate securely over a direct socket connection — no se
 ## 🚀 Quick Start
 
 1. Clone the repository:
-   ```git clone https://github.com/xzyqiu/Terminal-Chat-App/.git```
+   ```git clone https://github.com/xzyqiu/Terminal-Chat-App.git```
    ```cd Terminal-Chat-App```
 
-2. Create and activate a virtual environment:
+3. Create and activate a virtual environment:
    ```python -m venv venv```
    ```source venv/bin/activate   # Linux/macOS```
    ```venv\Scripts\activate      # Windows```
 
-3. Install dependencies:
+4. Install dependencies:
    ```pip install -r requirements.txt```
 
-4. Start the host:
+5. Start the host:
    ```python -m src.main host```
 
-5. Join as a guest from another terminal or device:
+6. Join as a guest from another terminal or device:
    ```python -m src.main join```
 
-6. Chat securely in your terminal window!
+7. Chat securely in your terminal window!
 
 ## ⚙️ Security
 All messages are encrypted end-to-end using session keys established during a handshake phase.  
