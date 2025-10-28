@@ -12,23 +12,24 @@ It lets two users communicate securely over a direct socket connection — no se
 - **Lightweight and Minimal Dependencies** — Easy to install and run.
 
 ## 🚀 Quick Start
+
 1. Clone the repository:
-   git clone https://github.com/yourusername/terminal-chat.git
-   cd terminal-chat
+   ```git clone https://github.com/yourusername/terminal-chat.git```
+   ```cd terminal-chat```
 
 2. Create and activate a virtual environment:
-   python -m venv venv
-   source venv/bin/activate   # Linux/macOS
-   venv\Scripts\activate      # Windows
+   ```python -m venv venv```
+   ```source venv/bin/activate   # Linux/macOS```
+   ```venv\Scripts\activate      # Windows```
 
 3. Install dependencies:
-   pip install -r requirements.txt
+   ```pip install -r requirements.txt```
 
 4. Start the host:
-   python -m src.main host
+   ```python -m src.main host```
 
 5. Join as a guest from another terminal or device:
-   python -m src.main join
+   ```python -m src.main join```
 
 6. Chat securely in your terminal window!
 
