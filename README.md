@@ -1,60 +1,49 @@
-# 🗨️ Secure Encrypted CLI Messaging
+# TermTalk
 
-**TermTalk** is a lightweight, end-to-end encrypted messaging app that runs entirely in your terminal.  
-It lets two users communicate securely over a direct socket connection — no servers, no cloud, just your terminal and an IP address.
+TermTalk is a small, terminal-based, peer-to-peer chat prototype focused on short-lived, direct messaging sessions. The reference implementation demonstrates the messaging flow, a simple handshake, and an in-memory room system for tests and demos.
 
-## 🔒 Features
-- **End-to-End Encryption** — Messages are protected with modern cryptography.  
-- **Peer-to-Peer Communication** — Direct socket connections between host and guest.  
-- **Cross-Platform** — Works anywhere Python does (Linux, macOS, Windows).  
-- **Simple Setup** — Start a chat room or join one using an IP and port.  
-- **Fully Terminal-Based** — Minimalist interface for secure command-line use.  
-- **Lightweight and Minimal Dependencies** — Easy to install and run.
+This project is a demonstration / learning implementation, not a production-ready secure messenger. See the Threat Model for limitations and recommended improvements.
 
-## 🚀 Quick Start
+## Features (reference)
+- End-to-end message integrity using HMAC-SHA256 (demo-only).
+- Ephemeral rooms with TTL and in-memory room management.
+- Simple CLI: host and join sessions from the terminal.
 
-1. Clone the repository:
-```
-git clone https://github.com/xzyqiu/TermTalk.git
-cd TermTalk
-```
-2. Create and activate a virtual environment:
-```
+## Quickstart
+1. Create a virtual environment and install dependencies:
+
+```sh
 python -m venv venv
-source venv/bin/activate   # Linux/macOS
-venv\Scripts\activate      # Windows
-
-```
-3. Install dependencies:
-```
+source venv/bin/activate  # Linux/macOS
 pip install -r requirements.txt
 ```
-4. Start the host:
+
+2. Host a room (runs the CLI entrypoint):
+
+```sh
+python -m src.main
+# then choose option 1: Host a room
 ```
-python -m src.main host
+
+3. Join a room (from the same process or another instance that can resolve the Room ID):
+
+```sh
+python -m src.main
+# then choose option 2: Join a room, and enter the Room ID shown by the host
 ```
-5. Join as a guest from another terminal or device:
+
+## Running tests
+The project includes a small unit test suite. Run:
+
+```sh
+python -m unittest discover -v
 ```
-python -m src.main join
-```
-6. Chat securely in your terminal window!
 
-⚙️ Security
+## Security & Limitations
+- The reference crypto (HMAC + deterministic shared string) is NOT suitable for production.
+- Room discovery in this implementation is process-local. To support cross-machine discovery, implement a secure rendezvous/registry service and protect registration with authentication.
+- Do not rely on this project for strong security guarantees without replacing the handshake and encryption primitives with well-reviewed, modern algorithms.
 
-All messages are encrypted end-to-end using session keys established during a handshake phase.
-No plaintext is ever transmitted over the network.
-Your data is safe even if the network is compromised.
-
-🧠 How It Works
-
-Handshake Phase: Host and guest exchange public keys to establish a secure session key.
-
-Message Encryption: Every message is encrypted using the session key before being sent.
-
-Direct Socket Communication: Messages travel directly between peers; no third-party server involved.
-
-🏷️ Topics
-
-Python, CLI, Chat, Peer-to-Peer, Encryption, Socket, Secure Messaging
-
+## Contributing
+Contributions are welcome. Please open issues for design discussions or feature requests.
 
