@@ -1,6 +1,10 @@
 import unittest
 import time
 from src.room.manager import RoomManager
+import unittest
+import time
+from src.room.manager import RoomManager
+
 
 class TestRoomManager(unittest.TestCase):
     def test_room_creation_and_expiry(self):
@@ -21,6 +25,7 @@ class TestRoomManager(unittest.TestCase):
 
         room.remove_peer(peer_id)
         self.assertNotIn(peer_id, room.peers)
+
 
 if __name__ == "__main__":
     unittest.main()

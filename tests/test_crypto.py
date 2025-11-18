@@ -1,5 +1,8 @@
 import unittest
 from src.crypto.box import SecureBox
+import unittest
+from src.crypto.box import SecureBox
+
 
 class TestSecureBox(unittest.TestCase):
     def test_encrypt_decrypt(self):
@@ -20,6 +23,7 @@ class TestSecureBox(unittest.TestCase):
         tampered = encrypted[:-4] + "abcd"
         with self.assertRaises(ValueError):
             box.decrypt(tampered)
+
 
 if __name__ == "__main__":
     unittest.main()
