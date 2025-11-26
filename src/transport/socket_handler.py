@@ -101,6 +101,10 @@ class EncryptedHostSocket:
                 return
             
             self.connections[peer_id] = (conn, secure_box)
+            
+            # Notify that peer has joined
+            from termcolor import colored
+            print(colored(f"\n✅ Peer {peer_ip} joined the room! ({len(self.connections)} peer(s) connected)", "green"))
 
             while self.running:
                 try:
@@ -129,10 +133,16 @@ class EncryptedHostSocket:
                 conn.close()
             except Exception:
                 pass
+            was_connected = peer_id in self.connections
             self.connections.pop(peer_id, None)
             self.connections_per_ip[peer_ip] -= 1
             if self.connections_per_ip[peer_ip] <= 0:
                 del self.connections_per_ip[peer_ip]
+            
+            # Notify that peer has left
+            if was_connected:
+                from termcolor import colored
+                print(colored(f"\n❌ Peer {peer_ip} left the room. ({len(self.connections)} peer(s) remaining)", "red"))
 
     def send_to_all(self, message: str) -> None:
         # Iterate over a snapshot to avoid runtime-dict-changes
@@ -172,6 +182,12 @@ class EncryptedPeerSocket:
         self.sock.sendall((handshake.get_public_key_str() + "\n").encode())
         shared_key = handshake.generate_shared_box(peer_key)
         self.secure_box = SecureBox(shared_key)
+        
+        # Notify successful connection
+        from termcolor import colored
+        print(colored(f"\n✅ Successfully connected to {self.host}:{self.port}", "green"))
+        print(colored("🔒 Secure encrypted channel established\n", "cyan"))
+        
         threading.Thread(target=self._recv_loop, daemon=True).start()
 
     def _recv_loop(self) -> None:
