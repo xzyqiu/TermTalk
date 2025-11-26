@@ -92,6 +92,10 @@ def main() -> None:
     
     args = parser.parse_args()
     
+    # Privacy protection check
+    from src.utils.privacy import get_privacy_info
+    privacy_status = get_privacy_info()
+    
     # Enable Tor if requested
     if args.tor:
         set_tor_enabled(True, args.tor_port)
@@ -100,6 +104,11 @@ def main() -> None:
         print(colored("[TOR] Make sure Tor is running (e.g., systemctl start tor)", "yellow"))
     
     print(colored("Welcome to TermTalk", "green"))
+    
+    # Display privacy status
+    if privacy_status["uses_ephemeral_ids"]:
+        print(colored("🔒 Privacy: Ephemeral IDs only (no MAC, hostname, or system info exposed)", "cyan"))
+    
     if is_tor_enabled():
         print(colored("🧅 Tor Mode Active", "magenta"))
     print("1. Host a room")

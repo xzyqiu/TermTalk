@@ -1,8 +1,8 @@
 import threading
 import time
-import uuid
 from typing import Any, Dict, Optional
 from src.room.registry import RoomRegistry
+from src.utils.privacy import generate_anonymous_room_id, generate_anonymous_peer_id
 
 
 class Room:
@@ -10,11 +10,14 @@ class Room:
 
     Attributes are intentionally small for testing. `peers` maps peer_id
     strings to optional metadata.
+    
+    Privacy: Uses cryptographically secure random IDs with no persistent
+    identifiers (no MAC address, hostname, or system info).
     """
 
     def __init__(self, host_ip: str, host_port: int, duration: int):
-        # Use 16 hex chars (64 bits entropy) instead of 8 for better security
-        self.room_id = str(uuid.uuid4())[:16].replace('-', '')
+        # Use privacy-preserving anonymous room ID (no MAC address, no UUIDs)
+        self.room_id = generate_anonymous_room_id()
         self.host_ip = host_ip
         self.host_port = host_port
         self.duration = duration
@@ -24,7 +27,8 @@ class Room:
         self.host_socket: Optional[Any] = None  # Optional EncryptedHostSocket for cleanup
 
     def add_peer(self, peer_info: Optional[dict] = None) -> str:
-        peer_id = str(uuid.uuid4())[:6]
+        # Use privacy-preserving anonymous peer ID
+        peer_id = generate_anonymous_peer_id()
         self.peers[peer_id] = peer_info or {}
         return peer_id
 

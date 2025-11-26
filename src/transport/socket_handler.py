@@ -97,7 +97,9 @@ class EncryptedHostSocket:
                 shared_key = handshake.generate_shared_box(peer_pub_key)
                 secure_box = SecureBox(shared_key)
             except Exception as e:
-                print(f"[SECURITY] Handshake failed with {peer_ip}: {type(e).__name__}")
+                # Sanitize error to avoid leaking system info
+                from src.utils.privacy import sanitize_error_message
+                print(f"[SECURITY] Handshake failed with {peer_ip}: {sanitize_error_message(e)}")
                 return
             
             self.connections[peer_id] = (conn, secure_box)
