@@ -44,12 +44,24 @@ def host_room() -> None:
 def join_room() -> None:
     room_id = input("Enter Room ID to join: ").strip()
     room = room_manager.get_room(room_id)
+    
+    # If room not found in local registry, offer direct connection
     if room is None:
-        print(colored(f"[CLI] Room '{room_id}' not found or expired.", "red"))
-        return
-
-    host_ip = room.host_ip
-    host_port = room.host_port
+        print(colored(f"[CLI] Room '{room_id}' not found in local registry.", "yellow"))
+        print(colored("[INFO] For LAN/Internet connections, enter host details directly:", "cyan"))
+        host_ip = input("Enter host IP address (or press Enter to cancel): ").strip()
+        if not host_ip:
+            print(colored("[CLI] Connection cancelled.", "red"))
+            return
+        host_port = input("Enter host port (default 12345): ").strip() or "12345"
+        try:
+            host_port = int(host_port)
+        except ValueError:
+            print(colored("[CLI] Invalid port number.", "red"))
+            return
+    else:
+        host_ip = room.host_ip
+        host_port = room.host_port
 
     peer_socket = EncryptedPeerSocket(host_ip, host_port)
     try:

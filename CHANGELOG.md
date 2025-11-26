@@ -2,6 +2,27 @@
 
 All notable changes to TermTalk are documented in this file.
 
+## [2.0.1] - 2025-12-18
+
+### 🌐 Network Connectivity Improvements
+
+#### Added
+- **Direct IP connection mode** for LAN/Internet connectivity
+  - When Room ID not found in local registry, prompts for host IP:port
+  - Enables internet connections without shared registry file
+  - Supports localhost, LAN, and internet (with port forwarding)
+
+#### Documentation
+- Added comprehensive "Network Connectivity" section to README
+  - Localhost, LAN, and Internet setup instructions
+  - Port forwarding guide for internet hosting
+  - Security recommendations for each network mode
+  - Practical examples with IP addresses
+
+#### Fixed
+- Clarified that registry is local-only, but connections work over any network
+- Added workaround instructions for cross-network communication
+
 ## [2.0.0] - 2025-11-26 (Updated 2025-12-18)
 
 ### 🔐 Security - Major Cryptographic Upgrade

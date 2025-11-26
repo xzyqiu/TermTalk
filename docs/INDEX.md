@@ -26,6 +26,16 @@ Welcome to TermTalk's documentation! This index helps you find the right documen
   - Architecture overview
   - Message formats
 
+## 🌐 Network & Connectivity
+
+**For internet and network setup:**
+- **[docs/INTERNET_CONNECTIVITY.md](INTERNET_CONNECTIVITY.md)** - Complete internet connectivity guide
+  - Localhost, LAN, and internet setup
+  - Port forwarding instructions
+  - NAT traversal solutions
+  - Direct IP connection mode
+  - Troubleshooting connection issues
+
 ## 🧅 Privacy & Anonymity
 
 **For privacy-focused users:**

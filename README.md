@@ -28,7 +28,8 @@ pip install -r requirements.txt
 python3 -m src.main
 # Choose option 1: Host a room
 # Default: binds to 127.0.0.1 (localhost only - secure)
-# For LAN access: enter your local IP (e.g., 192.168.1.100)
+# For LAN: enter your local IP (e.g., 192.168.1.100)
+# For Internet: enter 0.0.0.0 + forward port on router, share public IP
 # Share the Room ID (16 chars) with peers
 ```
 
@@ -46,6 +47,9 @@ python3 -m src.main
 python3 -m src.main
 # Choose option 2: Join a room
 # Enter the 16-character Room ID from the host
+# If Room ID not in local registry (LAN/Internet):
+#   - Enter host's IP address (e.g., 192.168.1.100 or public IP)
+#   - Enter port (default: 12345)
 ```
 
 **Example output:**
@@ -88,6 +92,73 @@ python3 -m src.main --tor --tor-port 9150
 - Access to .onion services (if supported)
 
 **Note:** Both host and client should use Tor for full anonymity. Tor adds latency (~1-2 seconds per connection).
+
+## Network Connectivity
+
+TermTalk supports **localhost, LAN, and internet** connections:
+
+### Localhost (Default - Most Secure)
+```sh
+# Host binds to 127.0.0.1 - only accessible from same machine
+Host IP: 127.0.0.1
+Port: 12345
+```
+**Use case:** Testing, same-machine communication
+
+### LAN (Local Network)
+```sh
+# Host binds to local IP (e.g., 192.168.1.100)
+Host IP: 192.168.1.100
+Port: 12345
+```
+**Use case:** Private network, trusted devices
+**Security:** Protected by network firewall
+
+### Internet (Requires Port Forwarding)
+```sh
+# Host binds to 0.0.0.0 (all interfaces)
+Host IP: 0.0.0.0
+Port: 12345
+```
+**Steps for Host:**
+1. Forward port 12345 on your router to host machine's local IP
+2. Find your public IP: `curl ifconfig.me` 
+3. Share with peer: **Room ID + your public IP + port**
+
+**Steps for Peer:**
+1. Run `python3 -m src.main` and choose "Join a room"
+2. Enter the Room ID (16 chars)
+3. When prompted "Room not found in local registry":
+   - Enter host's **public IP** (e.g., 203.0.113.45)
+   - Enter **port** (e.g., 12345)
+4. Connection established with end-to-end encryption!
+
+**Example:**
+```sh
+# Host (public IP: 203.0.113.45)
+python3 -m src.main
+> Host a room
+> IP: 0.0.0.0
+> Port: 12345
+> Room ID: a3f5d7b9e2c4f6a8
+
+# Peer (anywhere on internet)
+python3 -m src.main
+> Join a room  
+> Room ID: a3f5d7b9e2c4f6a8
+> Room not found in local registry
+> Host IP: 203.0.113.45
+> Port: 12345
+✅ Connected!
+```
+
+**Security recommendations:**
+- ⚠️ Use `--tor` flag to hide your public IP
+- ⚠️ Use VPN if you don't want to expose home IP
+- ⚠️ Keep room TTL short (default 5 min)
+- ⚠️ Be aware: No MITM protection (key fingerprint verification not implemented)
+
+**Registry Note:** The file-based registry (`~/.termtalk_rooms.json`) only works for same-machine discovery. For LAN/internet, the peer will be prompted to enter host IP:port directly.
 
 ## Running Tests
 The project includes comprehensive test coverage (18 tests):
@@ -141,6 +212,7 @@ python3 -m unittest tests.test_handshake -v    # Key exchange tests
 - **`SECURITY_AUDIT.md`**: Comprehensive vulnerability assessment and fixes
 - **`SECURITY_FIXES.md`**: Detailed changelog of security improvements
 - **`SECURITY_REFERENCE.md`**: Quick reference for security features
+- **`docs/INTERNET_CONNECTIVITY.md`**: Complete guide for internet/LAN connections
 - **`docs/PRIVACY.md`**: Privacy protections and anonymity guarantees
 - **`docs/threat_model.md`**: Threat analysis and mitigations
 - **`docs/TOR_GUIDE.md`**: Tor integration and anonymity guide
@@ -148,7 +220,9 @@ python3 -m unittest tests.test_handshake -v    # Key exchange tests
 ## Known Limitations
 - ⚠️ **No MITM protection**: Key exchange lacks fingerprint verification (trust-on-first-use)
 - ⚠️ **Metadata exposure**: Without Tor, IP addresses and timing visible to network observers
-- ⚠️ **Local room discovery**: File-based registry (~/.termtalk_rooms.json) for same-machine sessions
+- ⚠️ **Local registry only**: File-based registry (~/.termtalk_rooms.json) for same-machine discovery
+  - **Workaround**: Manually share host IP:port for LAN/internet connections
+  - Connections work over any network (localhost/LAN/internet)
 - ⚠️ **Room ID enumeration**: 64-bit entropy is strong but theoretically brute-forceable
 - ⚠️ **No formal audit**: Educational/demo project, not professionally audited
 
