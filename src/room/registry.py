@@ -19,6 +19,10 @@ class RoomRegistry:
         self.registry_path = Path(registry_path)
         self.lock = threading.Lock()
         
+        # Ensure registry file has restrictive permissions (owner read/write only)
+        if self.registry_path.exists():
+            os.chmod(self.registry_path, 0o600)
+        
     def register_room(self, room_id: str, host_ip: str, host_port: int, expires_at: float) -> None:
         """Register a room in the file-based registry."""
         with self.lock:
@@ -69,5 +73,7 @@ class RoomRegistry:
         try:
             with open(self.registry_path, "w") as f:
                 json.dump(rooms, f, indent=2)
+            # Ensure file has restrictive permissions (owner read/write only)
+            os.chmod(self.registry_path, 0o600)
         except IOError:
             pass  # Fail silently for demo purposes

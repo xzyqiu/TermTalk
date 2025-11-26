@@ -13,7 +13,8 @@ class Room:
     """
 
     def __init__(self, host_ip: str, host_port: int, duration: int):
-        self.room_id = str(uuid.uuid4())[:8]
+        # Use 16 hex chars (64 bits entropy) instead of 8 for better security
+        self.room_id = str(uuid.uuid4())[:16].replace('-', '')
         self.host_ip = host_ip
         self.host_port = host_port
         self.duration = duration

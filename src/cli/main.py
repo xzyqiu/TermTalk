@@ -13,7 +13,9 @@ def format_message(peer_id: str, message: str) -> str:
 
 
 def host_room() -> None:
-    host_ip = input("Enter your IP to host (0.0.0.0 for all interfaces): ").strip() or "0.0.0.0"
+    print(colored("[SECURITY] Default binding is localhost (127.0.0.1) - only accessible from this machine", "yellow"))
+    print(colored("[WARNING] Use 0.0.0.0 to bind all interfaces (exposes to network/internet)", "red"))
+    host_ip = input("Enter your IP to host (default 127.0.0.1): ").strip() or "127.0.0.1"
     host_port = int(input("Enter port to listen on (default 12345): ") or 12345)
     expiry = int(input("Room duration in seconds (default 300): ") or 300)
 
