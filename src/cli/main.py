@@ -1,7 +1,10 @@
 import threading
+import argparse
+import sys
 from datetime import datetime
 from src.room.manager import RoomManager
 from src.transport.socket_handler import EncryptedHostSocket, EncryptedPeerSocket
+from src.transport.tor_proxy import set_tor_enabled, is_tor_enabled
 from termcolor import colored
 
 room_manager = RoomManager()
@@ -65,7 +68,40 @@ def join_room() -> None:
 
 
 def main() -> None:
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description="TermTalk - Secure peer-to-peer terminal chat",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  python3 main.py              # Normal mode
+  python3 main.py --tor        # Route through Tor (requires Tor running)
+  python3 -m src.main --tor    # Alternative invocation
+"""
+    )
+    parser.add_argument(
+        '--tor',
+        action='store_true',
+        help='Route connections through Tor SOCKS5 proxy (127.0.0.1:9050)'
+    )
+    parser.add_argument(
+        '--tor-port',
+        type=int,
+        default=9050,
+        help='Tor SOCKS5 proxy port (default: 9050)'
+    )
+    
+    args = parser.parse_args()
+    
+    # Enable Tor if requested
+    if args.tor:
+        set_tor_enabled(True, args.tor_port)
+        print(colored("[TOR] Tor mode enabled - connections will route through SOCKS5 proxy", "cyan"))
+        print(colored(f"[TOR] Using Tor proxy at 127.0.0.1:{args.tor_port}", "cyan"))
+        print(colored("[TOR] Make sure Tor is running (e.g., systemctl start tor)", "yellow"))
+    
     print(colored("Welcome to TermTalk", "green"))
+    if is_tor_enabled():
+        print(colored("🧅 Tor Mode Active", "magenta"))
     print("1. Host a room")
     print("2. Join a room")
     choice = input("Select an option: ").strip()
