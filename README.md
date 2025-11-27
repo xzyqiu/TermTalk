@@ -1,272 +1,137 @@
 # TermTalk
 
-TermTalk is a small, terminal-based, peer-to-peer chat prototype focused on short-lived, direct messaging sessions. The reference implementation demonstrates the messaging flow, secure cryptographic primitives, and an in-memory room system for tests and demos.
+a simple terminal chat app for peer to peer messaging. made as a learning project to understand encryption and networking stuff.
 
-This project is a demonstration / learning implementation. See the Security Audit for deployment recommendations.
+## what it does
+- encrypted messaging using ChaCha20-Poly1305 and X25519 key exchange
+- connection limits to prevent spam (5 per IP, 50 total)
+- privacy protection - no MAC addresses or hostnames exposed
+- tor support for anonymous connections
+- rooms expire after 5 minutes
+- works on localhost, LAN, or internet
 
-## Features
-- 🔐 **Strong Cryptography**: ChaCha20-Poly1305 AEAD encryption with X25519 ECDH key exchange
-- 🛡️ **Security Hardening**: Connection limits (5 per IP, 50 global), rate limiting (10/min per IP), input validation
-- 🕵️ **Privacy-First**: No MAC addresses, hostnames, or system metadata exposed - ephemeral IDs only
-- 🧅 **Tor Support**: Optional anonymous routing through Tor SOCKS5 proxy
-- ⏱️ **Ephemeral Rooms**: TTL-based rooms (default 5 min) with automatic cleanup
-- 🔔 **Real-time Notifications**: Visual alerts for joins, leaves, and connection status
-- 💻 **Simple CLI**: Host and join sessions from the terminal with colored output
-- 🔒 **Forward Secrecy**: Ephemeral X25519 keys per session
+## how to use
 
-## Quickstart
-
-### 1. Install Dependencies
+### setup
 ```sh
 python3 -m venv venv
-source venv/bin/activate  # Linux/macOS
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Host a Room
+### host a room
 ```sh
 python3 -m src.main
-# Choose option 1: Host a room
-# Default: binds to 127.0.0.1 (localhost only - secure)
-# For LAN: enter your local IP (e.g., 192.168.1.100)
-# For Internet: enter 0.0.0.0 + forward port on router, share public IP
-# Share the Room ID (16 chars) with peers
+# pick option 1
+# default is localhost (127.0.0.1) - only works on your computer
+# for LAN use your local ip like 192.168.1.100
+# for internet use 0.0.0.0 and forward the port on your router
 ```
 
-**Example output:**
+example:
 ```
 [CLI] Room created! Room ID: d0933719af4a4c89
 [CLI] Waiting for peers... (expires in 300s)
-
-✅ Peer 192.168.1.100 joined the room! (1 peer(s) connected)
-[48504] [11:45:44] ME: Hello!
 ```
 
-### 3. Join a Room
+### join a room
 ```sh
 python3 -m src.main
-# Choose option 2: Join a room
-# Enter the 16-character Room ID from the host
-# If Room ID not in local registry (LAN/Internet):
-#   - Enter host's IP address (e.g., 192.168.1.100 or public IP)
-#   - Enter port (default: 12345)
+# pick option 2
+# enter the room id
+# if not found locally enter host ip and port manually
 ```
 
-**Example output:**
-```
-✅ Successfully connected to 192.168.1.1:12345
-🔒 Secure encrypted channel established
-
-Type your messages and press Enter to send...
-```
-
-## Tor Support 🧅
-
-Route connections through Tor for enhanced anonymity:
-
-### Prerequisites
-Install and start Tor:
+### using tor
+if you want to hide your ip address:
 ```sh
-# Debian/Ubuntu
+# make sure tor is running first
 sudo apt install tor
 sudo systemctl start tor
 
-# macOS
-brew install tor
-brew services start tor
-```
-
-### Usage
-```sh
-# Enable Tor routing
+# then run with tor flag
 python3 -m src.main --tor
-
-# Use custom Tor port
-python3 -m src.main --tor --tor-port 9150
 ```
 
-**Benefits:**
-- Anonymous connection routing
-- IP address protection
-- Network-level privacy
-- Access to .onion services (if supported)
+tor makes connections slower but more private
 
-**Note:** Both host and client should use Tor for full anonymity. Tor adds latency (~1-2 seconds per connection).
+## network stuff
 
-## Network Connectivity
+**localhost** - only works on same computer
+- host ip: 127.0.0.1
+- good for testing
 
-TermTalk supports **localhost, LAN, and internet** connections:
+**LAN** - works on local network
+- host ip: your local ip (like 192.168.1.100)
+- works with other computers on same wifi
 
-### Localhost (Default - Most Secure)
+**internet** - works anywhere
+- host ip: 0.0.0.0
+- forward port on router
+- share your public ip with peers
+- WARNING: exposes your ip unless using tor
+
+## how it works
+
+the host creates a room and gets a random room id. other people can join by entering that room id. if the room isnt in the local registry file they can enter the hosts ip and port directly.
+
+all messages are encrypted with ChaCha20-Poly1305. the encryption keys are exchanged using X25519 ECDH so nobody can read your messages even if they intercept them.
+
+rooms expire after 5 minutes by default to keep things temporary.
+
+## security notes
+
+- messages are encrypted end to end
+- no MITM protection so first connection is trust based (like ssh)
+- your ip is visible to peers unless using tor
+- this is a learning project not production ready
+- rate limiting prevents spam/dos attacks
+
+## testing
 ```sh
-# Host binds to 127.0.0.1 - only accessible from same machine
-Host IP: 127.0.0.1
-Port: 12345
-```
-**Use case:** Testing, same-machine communication
-
-### LAN (Local Network)
-```sh
-# Host binds to local IP (e.g., 192.168.1.100)
-Host IP: 192.168.1.100
-Port: 12345
-```
-**Use case:** Private network, trusted devices
-**Security:** Protected by network firewall
-
-### Internet (Requires Port Forwarding)
-```sh
-# Host binds to 0.0.0.0 (all interfaces)
-Host IP: 0.0.0.0
-Port: 12345
-```
-**Steps for Host:**
-1. Forward port 12345 on your router to host machine's local IP
-2. Find your public IP: `curl ifconfig.me` 
-3. Share with peer: **Room ID + your public IP + port**
-
-**Steps for Peer:**
-1. Run `python3 -m src.main` and choose "Join a room"
-2. Enter the Room ID (16 chars)
-3. When prompted "Room not found in local registry":
-   - Enter host's **public IP** (e.g., 203.0.113.45)
-   - Enter **port** (e.g., 12345)
-4. Connection established with end-to-end encryption!
-
-**Example:**
-```sh
-# Host (public IP: 203.0.113.45)
-python3 -m src.main
-> Host a room
-> IP: 0.0.0.0
-> Port: 12345
-> Room ID: a3f5d7b9e2c4f6a8
-
-# Peer (anywhere on internet)
-python3 -m src.main
-> Join a room  
-> Room ID: a3f5d7b9e2c4f6a8
-> Room not found in local registry
-> Host IP: 203.0.113.45
-> Port: 12345
-✅ Connected!
-```
-
-**Security recommendations:**
-- ⚠️ Use `--tor` flag to hide your public IP
-- ⚠️ Use VPN if you don't want to expose home IP
-- ⚠️ Keep room TTL short (default 5 min)
-- ⚠️ Be aware: No MITM protection (key fingerprint verification not implemented)
-
-**Registry Note:** The file-based registry (`~/.termtalk_rooms.json`) only works for same-machine discovery. For LAN/internet, the peer will be prompted to enter host IP:port directly.
-
-## Running Tests
-The project includes comprehensive test coverage (18 tests):
-
-```sh
-# Activate venv first
 source venv/bin/activate
-
-# Run all tests
-python3 -m unittest discover -s tests -v
-
-# Run specific test suites
-python3 -m unittest tests.test_crypto -v       # Crypto tests
-python3 -m unittest tests.test_security -v     # Security tests
-python3 -m unittest tests.test_handshake -v    # Key exchange tests
+python3 -m unittest discover tests
 ```
 
-**Test Coverage:**
-- ✅ ChaCha20-Poly1305 encryption/decryption
-- ✅ X25519 ECDH key exchange
-- ✅ Connection limiting and rate limiting
-- ✅ Input validation and size limits
-- ✅ Message authentication and tampering detection
-- ✅ Replay protection (nonce randomization)
+should see all tests pass
 
-## Security
+## requirements
+see requirements.txt for dependencies:
+- cryptography (for encryption)
+- PySocks (for tor)
+- termcolor (for colored output)
 
-### Cryptographic Primitives
-- **Encryption**: ChaCha20-Poly1305 AEAD (256-bit keys, 96-bit nonces, 128-bit auth tags)
-- **Key Exchange**: X25519 ECDH with HKDF-SHA256 key derivation
-- **Forward Secrecy**: Ephemeral key pairs generated per session
-- **Authentication**: Poly1305 MAC prevents tampering
-- **Replay Protection**: Random nonces ensure unique ciphertexts
-
-### Security Controls
-| Protection | Implementation | Limit |
-|------------|----------------|-------|
-| **Connection Limiting** | Per-IP + Global | 5 per IP, 50 total |
-| **Rate Limiting** | Time-based tracking | 10 connections/min per IP |
-| **Input Validation** | Size + format checks | 512B keys, 64KB messages |
-| **Socket Timeouts** | Connection + operation | 30-60 seconds |
-| **Room ID Entropy** | UUID-based generation | 64 bits (18 quintillion) |
-| **File Permissions** | Registry protection | 0600 (owner-only) |
-
-### Deployment Status
-🟢 **Suitable for trusted networks** (development, testing, LANs)  
-🟡 **Use with caution** on public networks (consider Tor)  
-🔴 **Not recommended** for high-security or production use without additional hardening
-
-### Documentation
-- **`SECURITY_AUDIT.md`**: Comprehensive vulnerability assessment and fixes
-- **`SECURITY_FIXES.md`**: Detailed changelog of security improvements
-- **`SECURITY_REFERENCE.md`**: Quick reference for security features
-- **`docs/INTERNET_CONNECTIVITY.md`**: Complete guide for internet/LAN connections
-- **`docs/PRIVACY.md`**: Privacy protections and anonymity guarantees
-- **`docs/threat_model.md`**: Threat analysis and mitigations
-- **`docs/TOR_GUIDE.md`**: Tor integration and anonymity guide
-
-## Known Limitations
-- ⚠️ **No MITM protection**: Key exchange lacks fingerprint verification (trust-on-first-use)
-- ⚠️ **Metadata exposure**: Without Tor, IP addresses and timing visible to network observers
-- ⚠️ **Local registry only**: File-based registry (~/.termtalk_rooms.json) for same-machine discovery
-  - **Workaround**: Manually share host IP:port for LAN/internet connections
-  - Connections work over any network (localhost/LAN/internet)
-- ⚠️ **Room ID enumeration**: 64-bit entropy is strong but theoretically brute-forceable
-- ⚠️ **No formal audit**: Educational/demo project, not professionally audited
-
-### Recommendations for Production
-1. **Add key fingerprint verification** to detect MITM attacks
-2. **Implement distributed registry** (Redis/etcd) for cross-machine discovery
-3. **Use Tor by default** for metadata protection
-4. **Add room passwords** for additional authentication layer
-5. **Professional security audit** before any production deployment
-
-## Project Structure
+## project structure
 ```
-TermTalk/
-├── src/
-│   ├── cli/            # Command-line interface
-│   ├── crypto/         # Encryption (ChaCha20-Poly1305, X25519)
-│   ├── room/           # Room management and registry
-│   ├── transport/      # Socket handlers and Tor integration
-│   └── utils/          # Helper functions
-├── tests/              # Unit and security tests
-├── docs/               # Documentation (threat model, Tor guide)
-├── SECURITY_*.md       # Security audit, fixes, and reference
-└── requirements.txt    # Dependencies
+src/
+  cli/          - command line interface
+  crypto/       - encryption stuff
+  room/         - room management
+  transport/    - networking and sockets
+  utils/        - helper functions
+tests/          - unit tests
+docs/           - documentation
 ```
 
-## Command-Line Options
-```sh
-python3 -m src.main [OPTIONS]
+## tips
 
-Options:
-  -h, --help              Show help message
-  --tor                   Route through Tor (requires Tor daemon)
-  --tor-port PORT         Custom Tor SOCKS5 port (default: 9050)
-```
+- keep room ttl short (default 5 min is good)
+- use tor if you dont want to expose your ip
+- for internet connections you need to forward ports on your router
+- the registry file is at ~/.termtalk_rooms.json
 
-## Contributing
-Contributions are welcome! Please:
-- Open issues for bugs or feature requests
-- Submit PRs with tests for new features
-- Follow existing code style (black + ruff)
-- Update documentation for significant changes
+## known issues
 
-See `tests/` for examples of how to write tests.
+- no key fingerprint verification so cant detect mitm
+- registry only works locally not across internet
+- no room passwords yet
+- not professionally audited
 
-## License
-See `LICENSE` file for details.
+## changelog
+
+see CHANGELOG.md for version history
+
+## license
+
+see LICENSE file
 
