@@ -7,24 +7,29 @@ from src.transport.socket_handler import EncryptedHostSocket, EncryptedPeerSocke
 from src.transport.tor_proxy import set_tor_enabled, is_tor_enabled
 from termcolor import colored
 
-room_manager = RoomManager()
+room_manager = RoomManager()  # this manages all the rooms
 
 def format_message(peer_id: str, message: str) -> str:
+    # add timestamp to message
     timestamp = datetime.now().strftime("%H:%M:%S")
     return f"[{timestamp}] {peer_id}: {message}"
 
 def host_room() -> None:
+    # tell user about security stuff
     print(colored("[SECURITY] Default binding is localhost (127.0.0.1) - only accessible from this machine", "yellow"))
     print(colored("[WARNING] Use 0.0.0.0 to bind all interfaces (exposes to network/internet)", "red"))
+    # get the ip and port from user
     host_ip = input("Enter your IP to host (default 127.0.0.1): ").strip() or "127.0.0.1"
     host_port = int(input("Enter port to listen on (default 12345): ") or 12345)
     expiry = int(input("Room duration in seconds (default 300): ") or 300)
 
+    # create the room
     room = room_manager.create_room(host_ip, host_port, expiry)
     host_socket = EncryptedHostSocket(host_ip, host_port)
     room.host_socket = host_socket  # link socket for cleanup
     host_socket.start()
 
+    # show the room info to user
     print(colored(f"[CLI] Room created! Room ID: {room.room_id}", "green"))
     print(colored(f"[CLI] Waiting for peers... (expires in {expiry}s)", "yellow"))
     print(colored("Peers should join by entering the Room ID (not your IP).", "cyan"))
@@ -40,10 +45,11 @@ def host_room() -> None:
 
 
 def join_room() -> None:
+    # ask user for room id
     room_id = input("Enter Room ID to join: ").strip()
     room = room_manager.get_room(room_id)
     
-    # If room not found in local registry, offer direct connection
+    # if room not found ask for ip manually
     if room is None:
         print(colored(f"[CLI] Room '{room_id}' not found in local registry.", "yellow"))
         print(colored("[INFO] For LAN/Internet connections, enter host details directly:", "cyan"))
@@ -52,12 +58,14 @@ def join_room() -> None:
             print(colored("[CLI] Connection cancelled.", "red"))
             return
         host_port = input("Enter host port (default 12345): ").strip() or "12345"
+        # convert port to number
         try:
             host_port = int(host_port)
         except ValueError:
             print(colored("[CLI] Invalid port number.", "red"))
             return
     else:
+        # use room info
         host_ip = room.host_ip
         host_port = room.host_port
 
@@ -115,12 +123,13 @@ def main() -> None:
     
     print(colored("Welcome to TermTalk", "green"))
     
-    # Privacy Status
+    # show privacy stuff
     if privacy_status["uses_ephemeral_ids"]:
-        print(colored("🔒 Privacy: Ephemeral IDs only (no MAC, hostname, or system info exposed)", "cyan"))
+        print(colored("[Privacy] Ephemeral IDs only (no MAC, hostname, or system info exposed)", "cyan"))
     
+    # check if using tor
     if is_tor_enabled():
-        print(colored("🧅 Tor Mode Active", "magenta"))
+        print(colored("[Tor Mode Active]", "magenta"))
     print("1. Host a room")
     print("2. Join a room")
     choice = input("Select an option: ").strip()

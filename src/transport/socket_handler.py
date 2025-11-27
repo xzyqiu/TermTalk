@@ -8,13 +8,14 @@ from src.crypto.box import SecureBox
 
 
 class EncryptedHostSocket:
-
+    # this is the server socket that accepts connections
     def __init__(self, host: str, port: int, max_connections: int = 50, max_per_ip: int = 5):
         self.host = host
         self.port = port
+        # setup socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.settimeout(30)  # Accept timeout
+        self.sock.settimeout(30)  # timeout for accepting
         self.connections: Dict[str, Tuple[socket.socket, SecureBox]] = {}
         self.connections_per_ip: Dict[str, int] = defaultdict(int)
         self.connection_timestamps: Dict[str, list] = defaultdict(list)
@@ -23,24 +24,29 @@ class EncryptedHostSocket:
         self.running = True
 
     def start(self) -> None:
+        # bind and start listening
         self.sock.bind((self.host, self.port))
         self.sock.listen()
+        # start thread to accept connections
         threading.Thread(target=self._accept_loop, daemon=True).start()
 
     def _accept_loop(self) -> None:
+        # keep accepting connections
         while self.running:
             try:
                 conn, addr = self.sock.accept()
+                # check if too many connections
                 if len(self.connections) >= self.max_connections:
                     print(f"[SECURITY] Max connections reached, rejecting {addr[0]}")
                     conn.close()
                     continue
+                # check if ip has too many connections
                 if self.connections_per_ip[addr[0]] >= self.max_per_ip:
                     print(f"[SECURITY] Max connections per IP reached for {addr[0]}")
                     conn.close()
                     continue
                 
-                # Rate limiting: max 10 connections per minute per IP
+                # rate limiting - max 10 per minute per ip
                 now = time.time()
                 recent_connections = [t for t in self.connection_timestamps[addr[0]] if now - t < 60]
                 self.connection_timestamps[addr[0]] = recent_connections
@@ -86,7 +92,8 @@ class EncryptedHostSocket:
             self.connections[peer_id] = (conn, secure_box)
             
             from termcolor import colored
-            print(colored(f"\n✅ Peer {peer_ip} joined the room! ({len(self.connections)} peer(s) connected)", "green"))
+            # peer joined notification
+            print(colored(f"\n[JOIN] Peer {peer_ip} joined the room! ({len(self.connections)} peer(s) connected)", "green"))
 
             while self.running:
                 try:
@@ -122,7 +129,8 @@ class EncryptedHostSocket:
             
             if was_connected:
                 from termcolor import colored
-                print(colored(f"\n❌ Peer {peer_ip} left the room. ({len(self.connections)} peer(s) remaining)", "red"))
+                # peer left notification
+                print(colored(f"\n[LEAVE] Peer {peer_ip} left the room. ({len(self.connections)} peer(s) remaining)", "red"))
 
     def send_to_all(self, message: str) -> None:
         for peer_id, (conn, secure_box) in list(self.connections.items()):
@@ -161,8 +169,9 @@ class EncryptedPeerSocket:
         self.secure_box = SecureBox(shared_key)
         
         from termcolor import colored
-        print(colored(f"\n✅ Successfully connected to {self.host}:{self.port}", "green"))
-        print(colored("🔒 Secure encrypted channel established\n", "cyan"))
+        # connection successful
+        print(colored(f"\n[SUCCESS] Successfully connected to {self.host}:{self.port}", "green"))
+        print(colored("[ENCRYPTED] Secure encrypted channel established\n", "cyan"))
         
         threading.Thread(target=self._recv_loop, daemon=True).start()
 

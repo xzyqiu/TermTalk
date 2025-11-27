@@ -6,17 +6,20 @@ from typing import Optional, Dict
 
 
 class RoomRegistry:
-    
+    # stores rooms in a file so other processes can find them
     def __init__(self, registry_path: Optional[str] = None):
+        # use default path if not provided
         if registry_path is None:
             registry_path = os.path.join(os.path.expanduser("~"), ".termtalk_rooms.json")
         self.registry_path = Path(registry_path)
         self.lock = threading.Lock()
         
+        # set file permissions to owner only
         if self.registry_path.exists():
             os.chmod(self.registry_path, 0o600)
         
     def register_room(self, room_id: str, host_ip: str, host_port: int, expires_at: float) -> None:
+        # add room to registry file
         with self.lock:
             rooms = self._read_registry()
             rooms[room_id] = {
@@ -27,6 +30,7 @@ class RoomRegistry:
             self._write_registry(rooms)
     
     def get_room(self, room_id: str) -> Optional[Dict]:
+        # get room info from registry
         import time
         with self.lock:
             rooms = self._read_registry()

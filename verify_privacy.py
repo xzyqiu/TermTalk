@@ -16,7 +16,7 @@ from src.utils.privacy import get_privacy_info, verify_no_persistent_identifiers
 
 def check_imports():
     """Check that forbidden modules are not imported."""
-    print("🔍 Checking for forbidden imports...")
+    print("[CHECK] Checking for forbidden imports...")
     
     forbidden = {
         'uuid': ['src/room/manager.py'],
@@ -36,18 +36,18 @@ def check_imports():
                         violations.append(f"{filepath} imports {module}")
     
     if violations:
-        print("  ❌ Found forbidden imports:")
+        print("  [FAIL] Found forbidden imports:")
         for v in violations:
             print(f"     - {v}")
         return False
     else:
-        print("  ✅ No forbidden imports found")
+        print("  [PASS] No forbidden imports found")
         return True
 
 
 def check_privacy_status():
     """Verify privacy status flags."""
-    print("\n🔍 Checking privacy status...")
+    print("\n[CHECK] Checking privacy status...")
     
     info = get_privacy_info()
     
@@ -64,9 +64,9 @@ def check_privacy_status():
     for key, expected_value in expected.items():
         actual_value = info.get(key)
         if actual_value == expected_value:
-            status = "✅"
+            status = "[PASS]"
         else:
-            status = "❌"
+            status = "[FAIL]"
             all_good = False
         
         print(f"  {status} {key}: {actual_value} (expected: {expected_value})")
@@ -76,43 +76,43 @@ def check_privacy_status():
 
 def check_id_generation():
     """Test ID generation for proper format and randomness."""
-    print("\n🔍 Checking ID generation...")
+    print("\n[CHECK] Checking ID generation...")
     
     from src.utils.privacy import generate_anonymous_room_id, generate_anonymous_peer_id
     
     # Test Room IDs
     room_ids = [generate_anonymous_room_id() for _ in range(50)]
     if len(set(room_ids)) == 50:
-        print("  ✅ Room IDs are unique (50/50 samples)")
+        print("  [PASS] Room IDs are unique (50/50 samples)")
     else:
-        print(f"  ❌ Room IDs have collisions ({len(set(room_ids))}/50 unique)")
+        print(f"  [FAIL] Room IDs have collisions ({len(set(room_ids))}/50 unique)")
         return False
     
     if all(len(rid) == 16 for rid in room_ids):
-        print("  ✅ Room IDs are 16 characters")
+        print("  [PASS] Room IDs are 16 characters")
     else:
-        print("  ❌ Room IDs have incorrect length")
+        print("  [FAIL] Room IDs have incorrect length")
         return False
     
     if all(all(c in '0123456789abcdef' for c in rid) for rid in room_ids):
-        print("  ✅ Room IDs are valid hex")
+        print("  [PASS] Room IDs are valid hex")
     else:
-        print("  ❌ Room IDs contain non-hex characters")
+        print("  [FAIL] Room IDs contain non-hex characters")
         return False
     
     # Test Peer IDs
     peer_ids = [generate_anonymous_peer_id() for _ in range(50)]
     unique_count = len(set(peer_ids))
     if unique_count >= 45:  # Allow some collisions in 6-char space
-        print(f"  ✅ Peer IDs are mostly unique ({unique_count}/50 samples)")
+        print(f"  [PASS] Peer IDs are mostly unique ({unique_count}/50 samples)")
     else:
-        print(f"  ❌ Peer IDs have too many collisions ({unique_count}/50 unique)")
+        print(f"  [FAIL] Peer IDs have too many collisions ({unique_count}/50 unique)")
         return False
     
     if all(len(pid) == 6 for pid in peer_ids):
-        print("  ✅ Peer IDs are 6 characters")
+        print("  [PASS] Peer IDs are 6 characters")
     else:
-        print("  ❌ Peer IDs have incorrect length")
+        print("  [FAIL] Peer IDs have incorrect length")
         return False
     
     return True
@@ -120,7 +120,7 @@ def check_id_generation():
 
 def check_registry_privacy():
     """Verify registry only stores ephemeral data."""
-    print("\n🔍 Checking registry privacy...")
+    print("\n[CHECK] Checking registry privacy...")
     
     import tempfile
     import json
@@ -150,10 +150,10 @@ def check_registry_privacy():
                 violations.extend(forbidden_found)
         
         if violations:
-            print(f"  ❌ Registry contains forbidden keys: {violations}")
+            print(f"  [FAIL] Registry contains forbidden keys: {violations}")
             return False
         else:
-            print("  ✅ Registry only stores ephemeral data")
+            print("  [PASS] Registry only stores ephemeral data")
             return True
     
     finally:
@@ -181,13 +181,13 @@ def main():
     all_passed = all(result for _, result in results)
     
     for check_name, passed in results:
-        status = "✅ PASS" if passed else "❌ FAIL"
+        status = "[PASS] PASS" if passed else "[FAIL] FAIL"
         print(f"{status}: {check_name}")
     
     print("=" * 60)
     
     if all_passed:
-        print("\n🎉 All privacy checks passed!")
+        print("\n[SUCCESS] All privacy checks passed!")
         print("TermTalk is properly protecting user privacy.")
         return 0
     else:

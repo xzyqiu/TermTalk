@@ -1,73 +1,46 @@
-"""Privacy protection utilities for TermTalk.
+"""Privacy stuff for TermTalk.
 
-This module ensures no persistent identifiers or system metadata
-are exposed during communication, protecting user anonymity.
+makes sure no one can track you
 """
 import secrets
 import hashlib
 from typing import Optional
 
 
-# Privacy protection: Never expose real MAC address, hostname, or system info
+# dont expose mac address or hostname or anything
 _SESSION_ID: Optional[bytes] = None
 
 
 def get_ephemeral_session_id() -> bytes:
-    """Generate ephemeral session identifier.
+    """make temporary session id
     
-    Uses cryptographically secure random bytes instead of any
-    hardware identifiers (MAC address, disk serial, etc.).
-    
-    Returns:
-        32 random bytes that persist only for this process lifetime
+    uses random bytes not hardware stuff
     """
     global _SESSION_ID
     if _SESSION_ID is None:
+        # make new random session id
         _SESSION_ID = secrets.token_bytes(32)
     return _SESSION_ID
 
 
 def generate_anonymous_room_id() -> str:
-    """Generate anonymous room ID with no persistent identifiers.
-    
-    Uses only cryptographically secure randomness - no UUID1 (MAC-based),
-    no system info, no timestamps that could leak timezone info.
-    
-    Returns:
-        16-character hex string (64-bit entropy)
-    """
-    # Use secrets module for cryptographically secure randomness
+    """make random room id that cant be tracked"""
+    # use secrets not uuid cause uuid has mac address
     random_bytes = secrets.token_bytes(8)  # 64 bits
     return random_bytes.hex()
 
 
 def generate_anonymous_peer_id() -> str:
-    """Generate anonymous peer ID with no system metadata.
-    
-    Returns:
-        6-character lowercase alphanumeric string
-    """
-    # Use secrets for randomness
+    """make random peer id"""
+    # use random letters and numbers
     alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
     return "".join(secrets.choice(alphabet) for _ in range(6))
 
 
 def sanitize_error_message(error: Exception) -> str:
-    """Sanitize error messages to remove filesystem paths and system info.
-    
-    Prevents leaking information like:
-    - Filesystem paths (/home/username/...)
-    - Python installation paths
-    - System-specific error details
-    
-    Args:
-        error: Exception to sanitize
-        
-    Returns:
-        Generic error type without sensitive details
-    """
+    """clean up error messages so they dont leak file paths"""
     error_type = type(error).__name__
-    # Return only error type, not message which might contain paths
+    # only return error type not the message
     return f"{error_type}"
 
 
