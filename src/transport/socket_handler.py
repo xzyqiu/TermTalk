@@ -8,17 +8,6 @@ from src.crypto.box import SecureBox
 
 
 class EncryptedHostSocket:
-    """Host socket that performs a simple handshake and manages encrypted peers.
-
-    This implementation is intentionally minimal and intended for demo use
-    (test-suite uses higher-level RoomManager). It accepts connections and
-    keeps a mapping of `peer_id -> (conn, secure_box)` for sending messages.
-    
-    Security features:
-    - Connection limits per IP and globally
-    - Socket timeouts to prevent resource exhaustion
-    - Rate limiting for new connections
-    """
 
     def __init__(self, host: str, port: int, max_connections: int = 50, max_per_ip: int = 5):
         self.host = host
@@ -42,14 +31,10 @@ class EncryptedHostSocket:
         while self.running:
             try:
                 conn, addr = self.sock.accept()
-                
-                # Check global connection limit
                 if len(self.connections) >= self.max_connections:
                     print(f"[SECURITY] Max connections reached, rejecting {addr[0]}")
                     conn.close()
                     continue
-                
-                # Check per-IP connection limit
                 if self.connections_per_ip[addr[0]] >= self.max_per_ip:
                     print(f"[SECURITY] Max connections per IP reached for {addr[0]}")
                     conn.close()
@@ -82,29 +67,24 @@ class EncryptedHostSocket:
         peer_ip = addr[0]
         handshake = Handshake()
         try:
-            # Send our public key
             conn.sendall((handshake.get_public_key_str() + "\n").encode())
-            
-            # Receive peer public key with size limit
             peer_pub_key = conn.recv(1024).decode().strip()
             
             if not peer_pub_key or len(peer_pub_key) > 512:
                 print(f"[SECURITY] Invalid public key length from {peer_ip}")
                 return
             
-            # Perform key exchange
+            #Key exchange
             try:
                 shared_key = handshake.generate_shared_box(peer_pub_key)
                 secure_box = SecureBox(shared_key)
             except Exception as e:
-                # Sanitize error to avoid leaking system info
                 from src.utils.privacy import sanitize_error_message
                 print(f"[SECURITY] Handshake failed with {peer_ip}: {sanitize_error_message(e)}")
                 return
             
             self.connections[peer_id] = (conn, secure_box)
             
-            # Notify that peer has joined
             from termcolor import colored
             print(colored(f"\n✅ Peer {peer_ip} joined the room! ({len(self.connections)} peer(s) connected)", "green"))
 
@@ -126,7 +106,6 @@ class EncryptedHostSocket:
                     break
                 except ValueError:
                     print(f"[{peer_id}] Message authentication failed")
-                    # Don't break - could be network corruption
                 except Exception as e:
                     print(f"[{peer_id}] Error: {type(e).__name__}")
                     break
@@ -141,18 +120,15 @@ class EncryptedHostSocket:
             if self.connections_per_ip[peer_ip] <= 0:
                 del self.connections_per_ip[peer_ip]
             
-            # Notify that peer has left
             if was_connected:
                 from termcolor import colored
                 print(colored(f"\n❌ Peer {peer_ip} left the room. ({len(self.connections)} peer(s) remaining)", "red"))
 
     def send_to_all(self, message: str) -> None:
-        # Iterate over a snapshot to avoid runtime-dict-changes
         for peer_id, (conn, secure_box) in list(self.connections.items()):
             try:
                 conn.sendall(secure_box.encrypt(message).encode())
             except Exception:
-                # Ignore broken peers; cleanup happens in _handle_client
                 pass
 
     def stop(self) -> None:
@@ -164,7 +140,6 @@ class EncryptedHostSocket:
 
 
 class EncryptedPeerSocket:
-    """Client peer socket that connects to an EncryptedHostSocket."""
 
     def __init__(self, host: str, port: int):
         self.host = host
@@ -185,7 +160,6 @@ class EncryptedPeerSocket:
         shared_key = handshake.generate_shared_box(peer_key)
         self.secure_box = SecureBox(shared_key)
         
-        # Notify successful connection
         from termcolor import colored
         print(colored(f"\n✅ Successfully connected to {self.host}:{self.port}", "green"))
         print(colored("🔒 Secure encrypted channel established\n", "cyan"))

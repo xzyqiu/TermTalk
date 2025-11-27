@@ -1,8 +1,3 @@
-"""Simple file-based room registry for cross-process discovery.
-
-This is a minimal implementation for local testing/demo. For production,
-replace with a proper distributed registry (Redis, etcd, or HTTP service).
-"""
 import json
 import os
 import threading
@@ -11,7 +6,6 @@ from typing import Optional, Dict
 
 
 class RoomRegistry:
-    """File-based registry for sharing room info across processes."""
     
     def __init__(self, registry_path: Optional[str] = None):
         if registry_path is None:
@@ -19,12 +13,10 @@ class RoomRegistry:
         self.registry_path = Path(registry_path)
         self.lock = threading.Lock()
         
-        # Ensure registry file has restrictive permissions (owner read/write only)
         if self.registry_path.exists():
             os.chmod(self.registry_path, 0o600)
         
     def register_room(self, room_id: str, host_ip: str, host_port: int, expires_at: float) -> None:
-        """Register a room in the file-based registry."""
         with self.lock:
             rooms = self._read_registry()
             rooms[room_id] = {
@@ -35,23 +27,19 @@ class RoomRegistry:
             self._write_registry(rooms)
     
     def get_room(self, room_id: str) -> Optional[Dict]:
-        """Get room info from registry, returns None if not found or expired."""
         import time
         with self.lock:
             rooms = self._read_registry()
             room_info = rooms.get(room_id)
             if room_info is None:
                 return None
-            # Check if expired
             if time.time() > room_info.get("expires_at", 0):
-                # Clean up expired room
                 del rooms[room_id]
                 self._write_registry(rooms)
                 return None
             return room_info
     
     def unregister_room(self, room_id: str) -> None:
-        """Remove a room from the registry."""
         with self.lock:
             rooms = self._read_registry()
             if room_id in rooms:
@@ -59,7 +47,6 @@ class RoomRegistry:
                 self._write_registry(rooms)
     
     def _read_registry(self) -> Dict:
-        """Read the registry file, return empty dict if doesn't exist."""
         if not self.registry_path.exists():
             return {}
         try:
@@ -69,11 +56,9 @@ class RoomRegistry:
             return {}
     
     def _write_registry(self, rooms: Dict) -> None:
-        """Write the registry file."""
         try:
             with open(self.registry_path, "w") as f:
                 json.dump(rooms, f, indent=2)
-            # Ensure file has restrictive permissions (owner read/write only)
             os.chmod(self.registry_path, 0o600)
         except IOError:
-            pass  # Fail silently for demo purposes
+            pass 

@@ -9,11 +9,9 @@ from termcolor import colored
 
 room_manager = RoomManager()
 
-
 def format_message(peer_id: str, message: str) -> str:
     timestamp = datetime.now().strftime("%H:%M:%S")
     return f"[{timestamp}] {peer_id}: {message}"
-
 
 def host_room() -> None:
     print(colored("[SECURITY] Default binding is localhost (127.0.0.1) - only accessible from this machine", "yellow"))
@@ -80,7 +78,7 @@ def join_room() -> None:
 
 
 def main() -> None:
-    # Parse command line arguments
+    # Parse command-line arguments to enable Tor routing if requested
     parser = argparse.ArgumentParser(
         description="TermTalk - Secure peer-to-peer terminal chat",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -104,11 +102,11 @@ def main() -> None:
     
     args = parser.parse_args()
     
-    # Privacy protection check
+    # Privacy info
     from src.utils.privacy import get_privacy_info
     privacy_status = get_privacy_info()
     
-    # Enable Tor if requested
+    # Tor Enablement
     if args.tor:
         set_tor_enabled(True, args.tor_port)
         print(colored("[TOR] Tor mode enabled - connections will route through SOCKS5 proxy", "cyan"))
@@ -117,7 +115,7 @@ def main() -> None:
     
     print(colored("Welcome to TermTalk", "green"))
     
-    # Display privacy status
+    # Privacy Status
     if privacy_status["uses_ephemeral_ids"]:
         print(colored("🔒 Privacy: Ephemeral IDs only (no MAC, hostname, or system info exposed)", "cyan"))
     
