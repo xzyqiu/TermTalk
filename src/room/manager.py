@@ -1,5 +1,6 @@
 import threading
 import time
+import hashlib
 from typing import Any, Dict, Optional
 from src.room.registry import RoomRegistry
 from src.utils.privacy import generate_anonymous_room_id, generate_anonymous_peer_id
@@ -7,7 +8,7 @@ from src.utils.privacy import generate_anonymous_room_id, generate_anonymous_pee
 
 class Room:
     # represents a chat room
-    def __init__(self, host_ip: str, host_port: int, duration: int):
+    def __init__(self, host_ip: str, host_port: int, duration: int, password: Optional[str] = None):
         # make random room id for privacy
         self.room_id = generate_anonymous_room_id()
         self.host_ip = host_ip
@@ -17,6 +18,18 @@ class Room:
         self.active = True
         self.peers: Dict[str, dict] = {}
         self.host_socket: Optional[Any] = None  # socket for cleanup
+        # hash password if provided
+        self.password_hash = self._hash_password(password) if password else None
+    
+    def _hash_password(self, password: str) -> str:
+        # hash password with sha256
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    def verify_password(self, password: str) -> bool:
+        # check if password matches
+        if self.password_hash is None:
+            return True  # no password set
+        return self._hash_password(password) == self.password_hash
 
     def add_peer(self, peer_info: Optional[dict] = None) -> str:
         # add a peer and give them random id
@@ -42,9 +55,9 @@ class RoomManager:
         self.lock = threading.Lock()
         self.registry = registry or RoomRegistry()
 
-    def create_room(self, host_ip: str, host_port: int, duration: int) -> Room:
+    def create_room(self, host_ip: str, host_port: int, duration: int, password: Optional[str] = None) -> Room:
         # make new room
-        room = Room(host_ip, host_port, duration)
+        room = Room(host_ip, host_port, duration, password)
         with self.lock:
             self.rooms[room.room_id] = room
         # register it so others can find it

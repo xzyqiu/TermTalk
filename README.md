@@ -2,6 +2,12 @@
 
 a simple terminal chat app for peer to peer messaging. made as a learning project to understand encryption and networking stuff.
 
+**learning project - known limitations:**
+- not professionally audited, use at your own risk
+- made to learn about cryptography and socket programming
+- security features implemented following standard practices but may have bugs
+- not recommended for sensitive communications
+
 ## what it does
 - encrypted messaging using ChaCha20-Poly1305 and X25519 key exchange
 - connection limits to prevent spam (5 per IP, 50 total)

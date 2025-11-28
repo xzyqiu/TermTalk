@@ -1,5 +1,14 @@
 # changelog
 
+## version 2.1.0 - current
+
+### what changed
+- added optional room password protection
+- passwords are hashed with SHA256 before storing
+- host can set password when creating room
+- joiners need to enter password if room is protected
+- updated readme with learning project disclaimer
+
 ## version 2.0.1 - dec 18 2025
 
 ### what changed
