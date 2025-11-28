@@ -9,9 +9,10 @@ from src.crypto.box import SecureBox
 
 class EncryptedHostSocket:
     # this is the server socket that accepts connections
-    def __init__(self, host: str, port: int, max_connections: int = 50, max_per_ip: int = 5):
+    def __init__(self, host: str, port: int, room=None, max_connections: int = 50, max_per_ip: int = 5):
         self.host = host
         self.port = port
+        self.room = room  # room object for password checking
         # setup socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -19,6 +20,7 @@ class EncryptedHostSocket:
         self.connections: Dict[str, Tuple[socket.socket, SecureBox]] = {}
         self.connections_per_ip: Dict[str, int] = defaultdict(int)
         self.connection_timestamps: Dict[str, list] = defaultdict(list)
+        self.banned_ips: set = set()  # ips banned for wrong passwords
         self.max_connections = max_connections
         self.max_per_ip = max_per_ip
         self.running = True
@@ -35,6 +37,11 @@ class EncryptedHostSocket:
         while self.running:
             try:
                 conn, addr = self.sock.accept()
+                # check if ip is banned
+                if addr[0] in self.banned_ips:
+                    print(f"[SECURITY] Banned IP attempted connection: {addr[0]}")
+                    conn.close()
+                    continue
                 # check if too many connections
                 if len(self.connections) >= self.max_connections:
                     print(f"[SECURITY] Max connections reached, rejecting {addr[0]}")
@@ -88,6 +95,31 @@ class EncryptedHostSocket:
                 from src.utils.privacy import sanitize_error_message
                 print(f"[SECURITY] Handshake failed with {peer_ip}: {sanitize_error_message(e)}")
                 return
+            
+            # check password if room has one
+            if self.room and self.room.password_hash is not None:
+                attempts = 0
+                max_attempts = 3
+                while attempts < max_attempts:
+                    conn.sendall(secure_box.encrypt("PASSWORD_REQUIRED").encode())
+                    password_data = conn.recv(4096)
+                    if not password_data:
+                        print(f"[SECURITY] No password provided from {peer_ip}")
+                        return
+                    password = secure_box.decrypt(password_data.decode())
+                    if self.room.verify_password(password):
+                        conn.sendall(secure_box.encrypt("PASSWORD_OK").encode())
+                        break
+                    else:
+                        attempts += 1
+                        if attempts >= max_attempts:
+                            conn.sendall(secure_box.encrypt("PASSWORD_BANNED").encode())
+                            self.banned_ips.add(peer_ip)
+                            print(f"[SECURITY] IP banned for failed password attempts: {peer_ip}")
+                            return
+                        else:
+                            conn.sendall(secure_box.encrypt(f"PASSWORD_INCORRECT:{max_attempts - attempts}").encode())
+                            print(f"[SECURITY] Incorrect password from {peer_ip} (attempt {attempts}/{max_attempts})")
             
             self.connections[peer_id] = (conn, secure_box)
             
@@ -156,7 +188,7 @@ class EncryptedPeerSocket:
         self.sock.settimeout(30)  # 30-second timeout for operations
         self.secure_box: Optional[SecureBox] = None
 
-    def connect(self) -> None:
+    def connect(self, password: Optional[str] = None) -> None:
         self.sock.connect((self.host, self.port))
         handshake = Handshake()
         peer_key = self.sock.recv(1024).decode().strip()
@@ -167,6 +199,31 @@ class EncryptedPeerSocket:
         self.sock.sendall((handshake.get_public_key_str() + "\n").encode())
         shared_key = handshake.generate_shared_box(peer_key)
         self.secure_box = SecureBox(shared_key)
+        
+        # check if password is needed
+        from termcolor import colored
+        while True:
+            first_msg = self.sock.recv(4096)
+            if not first_msg:
+                break
+            decrypted = self.secure_box.decrypt(first_msg.decode())
+            if decrypted == "PASSWORD_REQUIRED":
+                if not password:
+                    password = input(colored("Enter room password: ", "cyan")).strip()
+                self.sock.sendall(self.secure_box.encrypt(password).encode())
+            elif decrypted.startswith("PASSWORD_INCORRECT:"):
+                attempts_left = decrypted.split(":")[1]
+                print(colored(f"[CLI] Incorrect password. {attempts_left} attempts remaining.", "red"))
+                password = input(colored("Enter room password: ", "cyan")).strip()
+                self.sock.sendall(self.secure_box.encrypt(password).encode())
+            elif decrypted == "PASSWORD_BANNED":
+                print(colored("[CLI] Too many incorrect attempts. You have been banned from this room.", "red"))
+                self.sock.close()
+                raise Exception("Banned from room")
+            elif decrypted == "PASSWORD_OK":
+                break
+            else:
+                break
         
         from termcolor import colored
         # connection successful

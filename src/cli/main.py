@@ -28,7 +28,7 @@ def host_room() -> None:
     room = room_manager.create_room(host_ip, host_port, expiry, password)
     if password:
         print(colored("[SECURITY] Room is password protected", "green"))
-    host_socket = EncryptedHostSocket(host_ip, host_port)
+    host_socket = EncryptedHostSocket(host_ip, host_port, room=room)
     room.host_socket = host_socket  # link socket for cleanup
     host_socket.start()
 
@@ -71,12 +71,6 @@ def join_room() -> None:
         # use room info
         host_ip = room.host_ip
         host_port = room.host_port
-        # check password if room has one
-        if room.password_hash is not None:
-            password = input("Enter room password: ").strip()
-            if not room.verify_password(password):
-                print(colored("[CLI] Incorrect password.", "red"))
-                return
 
     peer_socket = EncryptedPeerSocket(host_ip, host_port)
     try:
