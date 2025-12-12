@@ -3,8 +3,8 @@ import threading
 import time
 from typing import Dict, Optional, Tuple
 from collections import defaultdict
-from src.crypto.handshake import Handshake
-from src.crypto.box import SecureBox
+from crypto.handshake import Handshake
+from crypto.box import SecureBox
 
 
 class EncryptedHostSocket:

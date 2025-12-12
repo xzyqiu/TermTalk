@@ -2,9 +2,9 @@ import threading
 import argparse
 import sys
 from datetime import datetime
-from src.room.manager import RoomManager
-from src.transport.socket_handler import EncryptedHostSocket, EncryptedPeerSocket
-from src.transport.tor_proxy import set_tor_enabled, is_tor_enabled
+from room.manager import RoomManager
+from transport.socket_handler import EncryptedHostSocket, EncryptedPeerSocket
+from transport.tor_proxy import set_tor_enabled, is_tor_enabled
 from termcolor import colored
 
 room_manager = RoomManager()  # this manages all the rooms
@@ -114,7 +114,7 @@ def main() -> None:
     args = parser.parse_args()
     
     # Privacy info
-    from src.utils.privacy import get_privacy_info
+    from utils.privacy import get_privacy_info
     privacy_status = get_privacy_info()
     
     # Tor Enablement

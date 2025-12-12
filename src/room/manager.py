@@ -2,8 +2,8 @@ import threading
 import time
 import hashlib
 from typing import Any, Dict, Optional
-from src.room.registry import RoomRegistry
-from src.utils.privacy import generate_anonymous_room_id, generate_anonymous_peer_id
+from room.registry import RoomRegistry
+from utils.privacy import generate_anonymous_room_id, generate_anonymous_peer_id
 
 
 class Room:
